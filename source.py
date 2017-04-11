@@ -4,6 +4,7 @@ class Node:
 
 	def __init__(self, name, link = False):
 		self.name = name
+		# является ли узел ссылкой
 		self.is_link = link
 
 
@@ -40,15 +41,17 @@ class Tree:
 
 	# ищем примерный корень слова
 	def filter(self, question_word, data_word):
+		# если количество букв в корне больше 3х,
+		# то обрезаем слово(приблизительно выделяем корень)
 		if len(question_word) >= 3:
 			last_index = ceil(sqrt(len(question_word))) + 1
 		else:
 			last_index = len(question_word)
-		# сравниваем
+		# сравниваем корни(вхождения)
 		if self.__compare(question_word[0:last_index], data_word):
-			return 1
+			return True
 
-		return 0
+		return False
 
 
 	# число вхождений слов
@@ -79,6 +82,7 @@ class Tree:
 						# прерываем сравнение букв слов
 						if temp == False:
 							break
+						# количество вхождений
 						concurrences.append(temp)
 
 		return len(concurrences)	
@@ -292,15 +296,16 @@ if __name__ == '__main__':
 	question2 = "Что использует поезд для передвижения"
 	question3 = "Кем управляется морское транспортное средство"
 	question4 = "Кем управляется яхта"
-	question5 = "является ли самолет транспортным средством"
+	question5 = "Является ли самолет транспортным средством"
 	question6 = "По каким дорогам двигается локомотив"
-	question7 = "cуществует ли такое транспортное средство, которое управляется пилотом и передвигается с помощью реактивных двигателей"
-	question8 = "самолет это транспортное средство"
-	question9 = "локомотив это поезд"
+	question7 = "Существует ли такое транспортное средство, которое управляется пилотом и передвигается с помощью реактивных двигателей"
+	question8 = "Самолет это транспортное средство"
+	question9 = "Локомотив это поезд"
 
 	# запуск поиска ответа на вопрос
-	result = tree.find(question5)
+	question = question5.lower()
+	result = tree.find(question)
 
 	# распечатка ответа
 	for line in result:
-		print([val.name for val in line])
+		print([node.name for node in line])

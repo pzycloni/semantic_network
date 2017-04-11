@@ -19,4 +19,7 @@
 9) "Локомотив это поезд"
 
 ### Общий вид связи между двумя сущностями(узлами)
-![общий вид](https://s8.hostingkartinok.com/uploads/thumbs/2017/04/c2ef2c10127dc4c01d392ae652c5b4c4.png)
+<img style="width:80%" src='https://s8.hostingkartinok.com/uploads/images/2017/04/c2ef2c10127dc4c01d392ae652c5b4c4.png'/>
+
+### Пример
+<img src='https://s8.hostingkartinok.com/uploads/thumbs/2017/04/dd63d7e5c2e9673ee3e21c345e591ab1.png'/>

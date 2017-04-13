@@ -1,20 +1,28 @@
 from math import sqrt, ceil
 
+# узел
 class Node:
 
 	def __init__(self, name, link = False):
+		# содержимое узла
 		self.name = name
-		# является ли узел ссылкой
+		# является ли узел связью
 		self.is_link = link
 
+# граф представлен в виде словаря
+# {
+#	parent: [child1, child2, ..., child8],
+#	child2: [child3, child7],
+#	..
+# }
 
 class Tree:
 
 	def __init__(self):
+		# граф
 		self.nodes = dict()
 
-
-	# добавление узлов и связей в дерево
+	# добавление узлов и связей в граф
 	def add(self, link, parent, child):
 		if parent not in self.nodes:
 			self.nodes[parent] = list()
@@ -24,7 +32,6 @@ class Tree:
 
 		self.nodes[parent].append(link)
 		self.nodes[link].append(child)
-
 
 	# проверяем, входит ли одно слово
 	# в другое или наоборот
@@ -38,79 +45,77 @@ class Tree:
 
 		return False
 
-
 	# ищем примерный корень слова
-	def filter(self, question_word, data_word):
-		# если количество букв в корне больше 3х,
-		# то обрезаем слово(приблизительно выделяем корень)
+	def is_same_root(self, question_word, data_word):
 		if len(question_word) >= 3:
 			last_index = ceil(sqrt(len(question_word))) + 1
 		else:
 			last_index = len(question_word)
-		# сравниваем корни(вхождения)
+		# сравниваем
 		if self.__compare(question_word[0:last_index], data_word):
 			return True
 
 		return False
 
-
-	# число вхождений слов
-	def get_count_concurrences(self, question, line):
-		count = 0
+	# число совпадающих слов
+	def count_concurrences(self, question, path):
+		counter = 0
 
 		for question_word in question.split():
-			for line_word in line:
-				# сравниваем корни слова
-				if self.filter(question_word, line_word.name):
-					count += 1
+			for path_word in path:
+				# ищем однокоренные слова
+				if self.is_same_root(question_word, path_word.name):
+					counter += 1
 
-				
+		return counter
 
-		return count
-
-
-	# число вхождений букв
-	def get_count_concurrences_alphabet(self, question, line):
+	# число совпадающих букв
+	def count_concurrences_alphabet(self, question, path):
 		concurrences = list()
 
 		for question_word in question.split():
-			for answer_word in line:
-				if self.filter(question_word, answer_word.name):
-					for i in range(min([len(answer_word.name), len(question_word)])):
+			for answer_word in path:
+				# проверяем, чтобы слова были однокоренными
+				if self.is_same_root(question_word, answer_word.name):
+		
+					min_length = min([len(answer_word.name), len(question_word)])
+					for i in range(min_length):
+						# сравниваем по буквам однокоренные слова
 						temp = self.__compare(answer_word.name[i], question_word[i])
 						# как только встретили несоответствие, 
-						# прерываем сравнение букв слов
+						# прерываем сравнение по буквам для пары слов
+						# и начинаем делать тоже самое для другой пары
+						# однокоренных слов
 						if temp == False:
 							break
-						# количество вхождений
+						# запоминаем количество совпавших букв
 						concurrences.append(temp)
 
-		return len(concurrences)	
-
+		return len(concurrences)
 
 	# все узлы графа
 	def get_list_nodes(self):
-		children = list()
+		nodes = list()
 
 		for parent in self.nodes:
-			for child in self.nodes[parent]:
-				if child not in children:
-					children.append(child)
+			for node in self.nodes[parent]:
+				if node not in nodes:
+					nodes.append(node)
 
-		return children
-
+		return nodes
 
 	# обход графа по узлам
 	def traversal(self, start, end, path = []):
 
 		path = path + [start]
-
+		# если путь существует,
+		# то возвращаем его
 		if start == end:
 			return path
 
 		if start not in self.nodes:
 			return None
-
+		# рекурсивный обход
 		for node in self.nodes[start]:
 			if node not in path:
 				newpath = self.traversal(node, end, path)
@@ -120,22 +125,21 @@ class Tree:
 
 		return None
 
-
 	# поиск ответа на вопрос
 	def find(self, question):
+		question = question.lower()
+		# узлы, с однокренными словами
 		nodes  = list()
-		result = list()
-		concurrences = list()
-
+		# все узлы графа
 		list_nodes = self.get_list_nodes()
 
 		# выбираем узлы, 
-		# которые совпадают со словами в вопросе 
+		# которые совпадают со словами в впоросе 
 		for word in question.split():
 			for node in list_nodes:
-				# сравниваем корень слова в узле 
-				# и корень слова в вопросе
-				if self.filter(word, node.name):
+				# находим однокоренные слова
+				# в вопросе и в графе
+				if self.is_same_root(word, node.name):
 					if node not in nodes:
 						nodes.append(node)
 						# если слово в узле это связь,
@@ -145,80 +149,93 @@ class Tree:
 								if child not in nodes:
 									nodes.append(child)
 
+		paths = list()
 		# обход графа по найденным узлам, 
-		# т.е. ищем все пути между узлами
+		# т.е. ищем все возможные пути между узлами
 		for start in range(len(nodes)):
 			for end in range(len(nodes)):
-				output = self.traversal(nodes[start], nodes[end])
-				if output:
-					result.append(output)
-		
-		temp = list()
+				if start != end:
+					path = self.traversal(nodes[start], nodes[end])
+					if path:
+						paths.append(path)
+
+		concurrences = list()
 		# проверяем сколько слов из вопроса 
 		# содержится в каждом найденном пути
-		for line in result:
-			temp.append(self.get_count_concurrences(question, line))
+		for path in paths:
+			counter = 0
+
+			for node in path:
+				counter += self.count_concurrences(question, path)
+
+			concurrences.append(counter)
 		# выбираем максимальное количество содержащихся слов
-		max_count_compare = max(temp)
+		max_counter = max(concurrences)
 
 		# получем все пути с максимальным числов вхождений
 		# ---------от--------- 
-		indexes = [i for i, value in enumerate(temp) if max_count_compare == value]
+		indexes = [i for i, value in enumerate(concurrences) if max_counter == value]
+
 		lines = list()
-		for i in indexes:
-			if len(result[i]) > 1:
-				lines.append(result[i])
+		for index in indexes:
+			# отбрасываем пути,
+			# которые имеют только один узел
+			if len(paths[index]) > 1:
+				lines.append(paths[index])
 		# ---------до---------
 
-		# сохраняем первичные найденные данные
-		first_result = result
+		# сохраняем первичные найденные данные,
+		# т.к. впоследствии может быть потерян 
+		# один из верных ответов
+		first_paths = paths
 
-		# находим максимальное число вхождений букв вопроса 
-		# в каждом слове из каждого пути
+		concurrences = list()
+		# находим максимальное число совпадений букв вопроса 
+		# и букв слов в найденных узлах для каждого пути line
 		for line in lines:
-			count = 0
-			for line_node in line:
-				# считаем число входящих букв
-				count += self.get_count_concurrences_alphabet(question, line)
+			# считаем число входящих букв
+			counter = self.count_concurrences_alphabet(question, line)
 
-			concurrences.append(count)
+			concurrences.append(counter)
 
 		# выбираем максимальное количество содержащихся букв
-		max_count_compare = max(concurrences)
+		max_counter = max(concurrences)
 		# получем все пути с максимальным числов вхождений
 		# ---------от--------- 
-		indexes = [i for i, value in enumerate(concurrences) if max_count_compare == value or max_count_compare - len(lines) == value]
+		indexes = [i for i, value in enumerate(concurrences) if max_counter == value]
 
-		result = list()
-		for i in indexes:
-			result.append(lines[i])
+		paths = list()
+		for index in indexes:
+			paths.append(lines[index])
 		# ---------до---------
 
 		# проверка на идентичность
 		# проверяем, не потярян ли правильный ответ
 		update = list()
-		for line in result:
-			for row in first_result:
-				count = 0
-				if len(line) == len(row):
+		for path in paths:
+			for row in first_paths:
+
+				length = 0
+				if len(path) == len(row):
 					# считаем количество вхождений 
 					# первичного результата в ответе
-					for i in range(len(line)):
-						res = self.__compare(line[i].name, row[i].name)
+					for number in range(len(path)):
+						res = self.__compare(path[number].name, row[number].name)
 						# если количество равных элементов на один меньше, 
 						# чем количество в ответе,
 						# то добавляем эти элементы в ответ
-						if count + 1 == len(line):
-							update.append(row[i])
+						if length + 1 == len(path):
+							update.append(row[number])
 						# как только находим несоответствие - обрываем поиск
 						if not res:
 							break
 						# количество вхождений
-						count += 1
+						length += 1
 		# применяем обновления	
-		result.append(update)
+		paths.append(update)
 
-		return result
+		return paths
+
 
 
 def load_base():
@@ -292,20 +309,19 @@ if __name__ == '__main__':
 	# собираем наш граф
 	tree = load_base()
 
-	question1 = "Какой двигатель имеют автомашины"
-	question2 = "Что использует поезд для передвижения"
-	question3 = "Кем управляется морское транспортное средство"
-	question4 = "Кем управляется яхта"
-	question5 = "Является ли самолет транспортным средством"
-	question6 = "По каким дорогам двигается локомотив"
-	question7 = "Существует ли такое транспортное средство, которое управляется пилотом и передвигается с помощью реактивных двигателей"
-	question8 = "Самолет это транспортное средство"
-	question9 = "Локомотив это поезд"
+	question1 = "Какой двигатель имеют автомашины?"
+	question2 = "Что использует поезд для передвижения?"
+	question3 = "Кем управляется морское транспортное средство?"
+	question4 = "Кем управляется яхта?"
+	question5 = "Является ли самолет транспортным средством?"
+	question6 = "По каким дорогам двигается локомотив?"
+	question7 = "Существует ли такое транспортное средство, которое управляется пилотом и передвигается с помощью реактивных двигателей?"
+	question8 = "Самолет это транспортное средство?"
+	question9 = "Локомотив это поезд?"
 
 	# запуск поиска ответа на вопрос
-	question = question5.lower()
-	result = tree.find(question)
+	answers = tree.find(question2)
 
 	# распечатка ответа
-	for line in result:
-		print([node.name for node in line])
+	for answer in answers:
+		print([node.name for node in answer])
